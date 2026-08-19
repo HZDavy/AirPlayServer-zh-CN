@@ -10,7 +10,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 
 ## 主界面
 <div align="center">
-    <img style="height: 512px; width: auto;" src="https://github.com/user-attachments/assets/ffedab29-b483-467d-991a-4060503b0fc0" />
+    <img style="height: 512px; width: auto;" src="screenshots/main-idle.png" />
 </div>
 
 <div align="center">
@@ -21,10 +21,10 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
         </tr>
         <tr>
             <td>
-                <img width="420" src="https://github.com/user-attachments/assets/f6f46275-112e-4126-9baf-61666502d03f" />
+                <img width="420" src="screenshots/settings-panel.png" />
             </td>
             <td>
-                <img width="420" src="https://github.com/user-attachments/assets/c492d993-0cae-4abb-892c-65c601e13a68" />
+                <img width="420" src="screenshots/pin-approval.jpg" />
             </td>
         </tr>
     </table>
@@ -32,7 +32,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 
 ## 查看器
 <div align="center">
-    <img style="height: 720px; width: auto;" src="https://github.com/user-attachments/assets/9b0c071e-070a-43f0-89b5-a936d4c11ea7" />
+    <img style="height: 720px; width: auto;" src="screenshots/fullscreen-overlay.png" />
 </div>
 
 ##
@@ -44,10 +44,10 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
         </tr>
         <tr>
             <td>
-                <img src="https://github.com/user-attachments/assets/3997a422-650b-42ad-8f42-9eba0e71af10" width="420" />
+                <img src="screenshots/session-controls.png" width="420" />
             </td>
             <td>
-                <img src="https://github.com/user-attachments/assets/b98681b5-f79a-493e-b9af-c1cd6a89c8c9" width="420" />
+                <img src="screenshots/fullscreen-overlay.png" width="420" />
             </td>
         </tr>
     </table>
@@ -55,7 +55,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 
 ## 安装
 
-1. 从 [Releases](https://github.com/xenos1337/AirPlayServer/releases/latest) 下载 `AirPlay2-Win-x64.zip`（沿用上游发布包）。
+1. 从 [Releases](https://github.com/HZDavy/AirPlayServer-zh-CN/releases/latest) 下载中文版 `AirPlayServer-zh-CN-x64.zip`。
 2. 解压压缩包。
 3. 如尚未安装，请安装 [Bonjour for Windows](https://support.apple.com/kb/DL999)。iTunes 也内置 Bonjour。
 4. 运行 `AirPlayServer.exe`。
@@ -76,6 +76,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 - 实时窗口缩放
 - 接收端分辨率可匹配显示器或手动设置
 - 自动 Bonjour 服务广播
+- 全中文界面与提示
 
 ## 使用方法
 
@@ -164,7 +165,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 1. 克隆仓库：
 
    ```bash
-   git clone https://github.com/xenos1337/AirPlayServer.git
+   git clone https://github.com/HZDavy/AirPlayServer-zh-CN.git
    ```
 
 2. 在 Visual Studio 中打开 `AirPlay.sln`。
@@ -187,6 +188,7 @@ AirPlayServer/
 |-- airplay2dll/             # DLL 封装与 FFmpeg H.264 解码器
 |-- dnssd/                   # Bonjour 发现 DLL
 |-- external/                # SDL2、FFmpeg、ImGui 等依赖
+|-- screenshots/             # README 截图
 `-- AirPlay.sln
 ```
 

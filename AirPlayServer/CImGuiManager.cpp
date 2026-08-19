@@ -71,15 +71,33 @@ namespace {
 	ImFont* LoadUiFont(ImGuiIO& io, const char* path, float size)
 	{
 		if (path == NULL) return NULL;
-		ImFontConfig config;
-		config.Flags = ImFontFlags_NoLoadError;
-		config.OversampleH = 3;
-		config.OversampleV = 2;
-		config.PixelSnapH = false;
-		config.PixelSnapV = false;
-		config.RasterizerMultiply = 1.0f;
-		return io.Fonts->AddFontFromFileTTF(path, size, &config, NULL);
+	ImFontConfig config;
+	config.Flags = ImFontFlags_NoLoadError;
+	config.OversampleH = 3;
+	config.OversampleV = 2;
+	config.PixelSnapH = false;
+	config.PixelSnapV = false;
+	config.RasterizerMultiply = 1.0f;
+	ImFont* font = io.Fonts->AddFontFromFileTTF(path, size, &config, NULL);
+	// 合并中文字体回退：Segoe UI / Arial 不含 CJK 字形，否则中文会显示成方块。
+	if (font != NULL) {
+		const char* cjkPaths[] = {
+			"C:\\Windows\\Fonts\\msyh.ttc",
+			"C:\\Windows\\Fonts\\msyhbd.ttc",
+			"C:\\Windows\\Fonts\\simhei.ttf",
+			"C:\\Windows\\Fonts\\simsun.ttc"
+		};
+		const char* cjkPath = FindFirstFont(cjkPaths, 4);
+		if (cjkPath != NULL) {
+			ImFontConfig mergeConfig;
+			mergeConfig.MergeMode = true;
+			mergeConfig.Flags = ImFontFlags_NoLoadError;
+			io.Fonts->AddFontFromFileTTF(cjkPath, size, &mergeConfig,
+				io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+		}
 	}
+	return font;
+}
 
 	void SetNextWindowPosConstrained(const char* windowName,
 		const ImVec2& defaultPosition, const ImVec2& nextSize, float margin,
@@ -230,9 +248,9 @@ namespace {
 	const char* QualityDescription(EQualityPreset preset)
 	{
 		switch (preset) {
-		case QUALITY_GOOD: return "Sharper image at 30 fps";
-		case QUALITY_FAST: return "Lowest latency at 60 fps";
-		default: return "Smooth 60 fps with balanced filtering";
+		case QUALITY_GOOD: return "30 fps，画面更清晰";
+		case QUALITY_FAST: return "60 fps，延迟最低";
+		default: return "60 fps 平滑，滤镜均衡";
 		}
 	}
 
@@ -591,13 +609,13 @@ void CImGuiManager::RenderHomeScreen(const char* deviceName, bool isServerRunnin
 	float settingsButtonHeight = 34.0f * scale;
 	ImGui::SetCursorPos(ImVec2(screenW - margin - settingsButtonWidth, top));
 	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f * scale);
-	if (ImGui::Button("Settings##HomeSettings",
+	if (ImGui::Button("设置##HomeSettings",
 		ImVec2(settingsButtonWidth, settingsButtonHeight))) {
-		ImGui::OpenPopup("Settings##HomeSettings");
+		ImGui::OpenPopup("设置##HomeSettings");
 	}
 	ImGui::PopStyleVar();
-	ShowTooltip("Receiver and security settings");
-	const char* statusLabel = isServerRunning ? "Ready" : "Offline";
+	ShowTooltip("接收器与安全设置");
+	const char* statusLabel = isServerRunning ? "就绪" : "离线";
 	ImGui::SetCursorPos(ImVec2(contentX + 50.0f * scale, top + 8.0f * scale));
 	DrawStatusLine(statusLabel, isServerRunning ? UI_SUCCESS : UI_ERROR, scale);
 
@@ -614,17 +632,17 @@ void CImGuiManager::RenderHomeScreen(const char* deviceName, bool isServerRunnin
 	ImGui::SetCursorPos(ImVec2(contentX, mainY));
 	if (m_pFontTitle != NULL) ImGui::PushFont(m_pFontTitle);
 	ImGui::TextColored(UI_TEXT_PRIMARY, "%s",
-		isServerRunning ? "Waiting for a device" : "Receiver unavailable");
+		isServerRunning ? "正在等待设备" : "接收器不可用");
 	if (m_pFontTitle != NULL) ImGui::PopFont();
 	float headingBottom = ImGui::GetItemRectMax().y - windowPos.y;
 
 	char instruction[512];
 	if (isServerRunning) {
 		strcpy_s(instruction, sizeof(instruction),
-			"Open Screen Mirroring on your Apple device and choose the receiver below.");
+			"在 Apple 设备上打开屏幕镜像，然后选择下方接收器。");
 	} else {
 		strcpy_s(instruction, sizeof(instruction),
-			"Check that Bonjour is available, then restart the receiver.");
+			"请确认 Bonjour 可用，然后重启接收器。");
 	}
 	ImGui::SetCursorPos(ImVec2(contentX, headingBottom + 12.0f * scale));
 	ImGui::PushTextWrapPos(contentX + contentWidth);
@@ -684,40 +702,40 @@ void CImGuiManager::RenderRequirePinSetting(float contentWidth, float scale)
 		pinToggleMin.y + (pinToggleHeight - pinLabelHeight) * 0.5f);
 	if (m_pFontBody != NULL) {
 		securityDrawList->AddText(m_pFontBody, m_pFontBody->LegacySize, pinLabelPos,
-			ImGui::ColorConvertFloat4ToU32(UI_TEXT_PRIMARY), "Require PIN");
+			ImGui::ColorConvertFloat4ToU32(UI_TEXT_PRIMARY), "需要 PIN");
 	} else {
 		securityDrawList->AddText(pinLabelPos, ImGui::ColorConvertFloat4ToU32(UI_TEXT_PRIMARY),
-			"Require PIN");
+			"需要 PIN");
 	}
-	ShowTooltip("Ask for approval before showing a 4-digit PIN for a new connection");
+	ShowTooltip("新连接需先获准，再显示 4 位 PIN");
 	float pinToggleBottom = ImGui::GetItemRectMax().y - ImGui::GetWindowPos().y;
 
 	if (m_airPlayPinEnabled) {
 		ImGui::SetCursorPos(ImVec2(contentX, pinToggleBottom + 6.0f * scale));
 		ImGui::PushTextWrapPos(contentX + contentWidth);
 		ImGui::TextColored(UI_TEXT_MUTED,
-			"New connections need your approval. After you allow one, this app shows a 4-digit PIN.");
+			"新连接需要你批准。允许后，本应用会显示 4 位 PIN。");
 		ImGui::PopTextWrapPos();
 		float pinHelpBottom = ImGui::GetItemRectMax().y - ImGui::GetWindowPos().y;
 		ImGui::SetCursorPos(ImVec2(contentX, pinHelpBottom + 4.0f * scale));
 		ImGui::PushTextWrapPos(contentX + contentWidth);
 		ImGui::TextColored(UI_WARNING,
-			"Warning: PIN approval is unreliable with MacBooks/macOS.");
+			"警告：在 MacBook/macOS 上 PIN 审批不稳定。");
 		ImGui::PopTextWrapPos();
 		ImGui::SetCursorPosX(contentX);
-		if (ImGui::Checkbox("Hide PIN from screen capture", &m_protectPinFromCapture)) {
+		if (ImGui::Checkbox("隐藏 PIN，防止屏幕截取", &m_protectPinFromCapture)) {
 			// Persisted with the other security settings on shutdown.
 		}
-		ShowTooltip("Exclude the receiver window from recording before showing the PIN locally");
+		ShowTooltip("在本地显示 PIN 前，将接收器窗口排除在录制之外");
 	} else {
 		ImGui::SetCursorPos(ImVec2(contentX, pinToggleBottom + 5.0f * scale));
-		ImGui::TextColored(UI_TEXT_MUTED, "Off - devices on your network can connect.");
+		ImGui::TextColored(UI_TEXT_MUTED, "关闭 - 同一网络内的设备可直接连接。");
 	}
 }
 
 void CImGuiManager::RenderSettingsPopup()
 {
-	if (ImGui::IsPopupOpen("Settings##HomeSettings")) {
+	if (ImGui::IsPopupOpen("设置##HomeSettings")) {
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
 		if (viewport != NULL) {
 			ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Appearing,
@@ -725,16 +743,16 @@ void CImGuiManager::RenderSettingsPopup()
 		}
 		ImGui::SetNextWindowSize(ImVec2(460.0f * m_dpiScale, 0.0f), ImGuiCond_Appearing);
 	}
-	if (!ImGui::BeginPopupModal("Settings##HomeSettings", NULL,
+	if (!ImGui::BeginPopupModal("设置##HomeSettings", NULL,
 		ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse)) {
 		return;
 	}
 
 	if (m_pFontHeading != NULL) ImGui::PushFont(m_pFontHeading);
-	ImGui::TextColored(UI_TEXT_PRIMARY, "Settings");
+	ImGui::TextColored(UI_TEXT_PRIMARY, "设置");
 	if (m_pFontHeading != NULL) ImGui::PopFont();
 	ImGui::Spacing();
-	ImGui::TextColored(UI_TEXT_SECONDARY, "Receiver name");
+	ImGui::TextColored(UI_TEXT_SECONDARY, "接收器名称");
 	ImGui::PushItemWidth(-1.0f);
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding,
 		ImVec2(10.0f * m_dpiScale, 11.0f * m_dpiScale));
@@ -746,29 +764,29 @@ void CImGuiManager::RenderSettingsPopup()
 	ImGui::PopItemWidth();
 	m_bEditingDeviceName = ImGui::IsItemActive();
 	ImGui::TextColored(UI_TEXT_MUTED,
-		"Shown in Screen Mirroring. Changes apply automatically when disconnected.");
+		"显示在屏幕镜像中。断开连接时改动自动生效。");
 
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
-	ImGui::TextColored(UI_TEXT_SECONDARY, "AirPlay resolution");
+	ImGui::TextColored(UI_TEXT_SECONDARY, "AirPlay 分辨率");
 	int displayIndex = m_pWindow != NULL ? SDL_GetWindowDisplayIndex(m_pWindow) : -1;
 	SDL_DisplayMode displayMode = {};
-	char automaticLabel[96] = "Match receiver monitor";
+	char automaticLabel[96] = "匹配接收器显示器";
 	if (displayIndex >= 0 &&
 		SDL_GetCurrentDisplayMode(displayIndex, &displayMode) == 0 &&
 		displayMode.w > 0 && displayMode.h > 0) {
 		snprintf(automaticLabel, sizeof(automaticLabel),
-			"Match receiver monitor (%d x %d)", displayMode.w, displayMode.h);
+			"匹配接收器显示器（%d x %d）", displayMode.w, displayMode.h);
 	}
-	const char* resolutionModes[] = { automaticLabel, "Custom" };
+	const char* resolutionModes[] = { automaticLabel, "自定义" };
 	int resolutionMode = m_matchReceiverMonitor ? 0 : 1;
 	ImGui::SetNextItemWidth(-1.0f);
 	if (ImGui::Combo("##ReceiverResolutionMode", &resolutionMode,
 		resolutionModes, 2)) {
 		m_matchReceiverMonitor = resolutionMode == 0;
 	}
-	ShowTooltip("Resolution macOS uses when negotiating a new mirrored display");
+	ShowTooltip("macOS 协商新镜像显示时使用的分辨率");
 	if (!m_matchReceiverMonitor) {
 		float separatorWidth = ImGui::CalcTextSize("x").x;
 		float fieldGap = ImGui::GetStyle().ItemSpacing.x;
@@ -793,26 +811,26 @@ void CImGuiManager::RenderSettingsPopup()
 		}
 	}
 	ImGui::TextColored(UI_TEXT_MUTED,
-		"Applied while idle. Reconnect from macOS after changing it.");
+		"在空闲时应用。更改后请从 macOS 重新连接。");
 
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
-	ImGui::TextColored(UI_TEXT_SECONDARY, "Viewer");
-	if (ImGui::Checkbox("Enter fullscreen when a device connects",
+	ImGui::TextColored(UI_TEXT_SECONDARY, "查看器");
+	if (ImGui::Checkbox("设备连接时自动进入全屏",
 		&m_autoFullscreenOnConnect)) {
 		// Persisted with the other viewer settings on shutdown.
 	}
-	ShowTooltip("Automatically use borderless fullscreen for each new AirPlay session");
+	ShowTooltip("为每个新的 AirPlay 会话自动使用无边框全屏");
 
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
-	ImGui::TextColored(UI_TEXT_SECONDARY, "Security");
+	ImGui::TextColored(UI_TEXT_SECONDARY, "安全");
 	RenderRequirePinSetting(ImGui::GetContentRegionAvail().x, m_dpiScale);
 
 	ImGui::Spacing();
-	if (ImGui::Button("Close", ImVec2(-1.0f, 0.0f))) {
+	if (ImGui::Button("关闭", ImVec2(-1.0f, 0.0f))) {
 		m_bEditingDeviceName = false;
 		ImGui::CloseCurrentPopup();
 	}
@@ -837,7 +855,7 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 
 	ImGui::SetCurrentContext(m_pContext);
 	if (m_pinApprovalPopupRequested) {
-		ImGui::OpenPopup("AirPlay connection request##PinApproval");
+		ImGui::OpenPopup("AirPlay 连接请求##PinApproval");
 		m_pinApprovalPopupRequested = false;
 	}
 
@@ -854,7 +872,7 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 		ImGui::SetNextWindowSize(ImVec2(390.0f * m_dpiScale,
 			260.0f * m_dpiScale), ImGuiCond_Always);
 	}
-	if (!ImGui::BeginPopupModal("AirPlay connection request##PinApproval", NULL,
+	if (!ImGui::BeginPopupModal("AirPlay 连接请求##PinApproval", NULL,
 		ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove |
 		ImGuiWindowFlags_NoResize)) {
 		return result;
@@ -868,16 +886,16 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 
 	if (awaitingApproval) {
 		if (m_pFontHeading != NULL) ImGui::PushFont(m_pFontHeading);
-		ImGui::TextColored(UI_TEXT_PRIMARY, "Allow this AirPlay connection?");
+		ImGui::TextColored(UI_TEXT_PRIMARY, "是否允许此 AirPlay 连接？");
 		if (m_pFontHeading != NULL) ImGui::PopFont();
 		ImGui::Spacing();
-		ImGui::TextColored(UI_TEXT_SECONDARY, "A nearby Apple device wants to connect.");
+		ImGui::TextColored(UI_TEXT_SECONDARY, "附近有 Apple 设备想要连接。");
 		if (remoteAddress != NULL && remoteAddress[0] != '\0') {
-			ImGui::TextColored(UI_TEXT_MUTED, "From %s", remoteAddress);
+			ImGui::TextColored(UI_TEXT_MUTED, "来自 %s", remoteAddress);
 		}
 		ImGui::Spacing();
 		ImGui::TextColored(UI_TEXT_MUTED,
-			"Allow it to reveal a 4-digit PIN.");
+			"允许后将显示 4 位 PIN。");
 
 		const ImGuiStyle& style = ImGui::GetStyle();
 		float buttonWidth = 132.0f * m_dpiScale;
@@ -887,7 +905,7 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 		ImGui::PushStyleColor(ImGuiCol_Button, UI_DENY_BUTTON);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, UI_DENY_BUTTON_HOVER);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, UI_DENY_BUTTON_ACTIVE);
-		if (ImGui::Button("Deny", ImVec2(buttonWidth, buttonHeight))) {
+		if (ImGui::Button("拒绝", ImVec2(buttonWidth, buttonHeight))) {
 			ImGui::CloseCurrentPopup();
 			result = PIN_APPROVAL_DENY;
 		}
@@ -897,25 +915,25 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 		ImGui::PushStyleColor(ImGuiCol_Button, UI_ALLOW_BUTTON);
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, UI_ALLOW_BUTTON_HOVER);
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, UI_ALLOW_BUTTON_ACTIVE);
-		if (ImGui::Button("Allow", ImVec2(buttonWidth, buttonHeight))) {
+		if (ImGui::Button("允许", ImVec2(buttonWidth, buttonHeight))) {
 			result = PIN_APPROVAL_ALLOW;
 		}
 		ImGui::PopStyleColor(3);
 	} else if (captureProtectionFailed) {
 		if (m_pFontHeading != NULL) ImGui::PushFont(m_pFontHeading);
-		ImGui::TextColored(UI_WARNING, "PIN kept private");
+		ImGui::TextColored(UI_WARNING, "PIN 已保护");
 		if (m_pFontHeading != NULL) ImGui::PopFont();
 		ImGui::Spacing();
 		ImGui::PushTextWrapPos();
 		ImGui::TextColored(UI_TEXT_SECONDARY,
-			"Windows could not exclude this window from screen capture, so the PIN was not shown.");
+			"Windows 无法将此窗口排除在屏幕截取之外，因此未显示 PIN。");
 		ImGui::PopTextWrapPos();
 
 		const ImGuiStyle& style = ImGui::GetStyle();
 		float buttonHeight = 40.0f * m_dpiScale;
 		float buttonY = ImGui::GetWindowHeight() - style.WindowPadding.y - buttonHeight;
 		ImGui::SetCursorPosY(buttonY);
-		if (ImGui::Button("Cancel connection", ImVec2(-1.0f, buttonHeight))) {
+		if (ImGui::Button("取消连接", ImVec2(-1.0f, buttonHeight))) {
 			ImGui::CloseCurrentPopup();
 			result = PIN_APPROVAL_DISMISS;
 		}
@@ -925,11 +943,11 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 		ImGui::CloseCurrentPopup();
 	} else {
 		if (m_pFontHeading != NULL) ImGui::PushFont(m_pFontHeading);
-		ImGui::TextColored(UI_SUCCESS, "Connection approved");
+		ImGui::TextColored(UI_SUCCESS, "连接已批准");
 		if (m_pFontHeading != NULL) ImGui::PopFont();
 		ImGui::Spacing();
 		ImGui::TextColored(UI_TEXT_SECONDARY,
-			"Enter this PIN on your Apple device:");
+			"请在 Apple 设备上输入此 PIN：");
 		ImGui::Spacing();
 		const char* displayPin = (pin != NULL && pin[0] != '\0') ? pin : "----";
 		if (m_pFontPin != NULL) ImGui::PushFont(m_pFontPin);
@@ -942,7 +960,7 @@ EPinApprovalResult CImGuiManager::RenderPinApprovalPopup(const char* remoteAddre
 		float buttonHeight = 40.0f * m_dpiScale;
 		float buttonY = ImGui::GetWindowHeight() - style.WindowPadding.y - buttonHeight;
 		ImGui::SetCursorPosY(buttonY);
-		if (ImGui::Button("Cancel", ImVec2(-1.0f, buttonHeight))) {
+		if (ImGui::Button("取消", ImVec2(-1.0f, buttonHeight))) {
 			ImGui::CloseCurrentPopup();
 			result = PIN_APPROVAL_DISMISS;
 		}
@@ -1019,16 +1037,16 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 		drawList->AddCircleFilled(ImVec2(buttonPos.x + 12.0f * scale,
 			buttonPos.y + buttonSize.y * 0.5f), 3.0f * scale,
 			ImGui::ColorConvertFloat4ToU32(UI_SUCCESS));
-		ImVec2 labelSize = ImGui::CalcTextSize("Show controls");
+		ImVec2 labelSize = ImGui::CalcTextSize("显示控制栏");
 		drawList->AddText(ImVec2(buttonPos.x + 24.0f * scale,
 			buttonPos.y + (buttonSize.y - labelSize.y) * 0.5f),
-			ImGui::ColorConvertFloat4ToU32(UI_TEXT_PRIMARY), "Show controls");
-		ShowTooltip("Open session controls (H)");
+			ImGui::ColorConvertFloat4ToU32(UI_TEXT_PRIMARY), "显示控制栏");
+		ShowTooltip("打开会话控制栏（H）");
 		ImGui::SameLine(0.0f, 0.0f);
 		if (DrawCloseButton("##DismissOverlayLauncher", dismissSize, scale)) {
 			m_overlayState = OVERLAY_HIDDEN;
 		}
-		ShowTooltip("Hide launcher; press H to show controls");
+		ShowTooltip("隐藏启动条；按 H 显示控制栏");
 		ImGui::End();
 		ImGui::PopStyleVar(3);
 		return;
@@ -1076,7 +1094,7 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 	float closeSize = 28.0f * scale;
 	float headerY = ImGui::GetCursorPosY();
 	const char* rawTitle = connectedDeviceName != NULL && connectedDeviceName[0] != '\0'
-		? connectedDeviceName : "AirPlay session";
+		? connectedDeviceName : "AirPlay 会话";
 	ImVec2 titleCursor = ImGui::GetCursorScreenPos();
 	float titleHeight = m_pFontHeading != NULL ? m_pFontHeading->LegacySize : ImGui::GetTextLineHeight();
 	panelDrawList->AddCircleFilled(
@@ -1093,7 +1111,7 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 	ImGui::Dummy(ImVec2(titleRight - titleCursor.x, titleHeight));
 	if (deviceName != NULL && deviceName[0] != '\0') {
 		char sessionTooltip[600];
-		snprintf(sessionTooltip, sizeof(sessionTooltip), "Sender: %s\nReceiver: %s", rawTitle, deviceName);
+		snprintf(sessionTooltip, sizeof(sessionTooltip), "发送方：%s\n接收器：%s", rawTitle, deviceName);
 		ShowTooltip(sessionTooltip);
 	} else {
 		ShowTooltip(rawTitle);
@@ -1102,7 +1120,7 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 	if (DrawCloseButton("##HideOverlay", closeSize, scale)) {
 		m_overlayState = OVERLAY_LAUNCHER;
 	}
-	ShowTooltip("Collapse controls");
+	ShowTooltip("折叠控制栏");
 
 	ImGui::SetCursorPosY(headerY + closeSize + 1.0f * scale);
 
@@ -1124,13 +1142,13 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 	if (m_pFontMono != NULL) ImGui::PopFont();
 
 	if (droppedFrames > 0) {
-		ImGui::TextColored(UI_WARNING, "%llu of %llu frames dropped", droppedFrames, totalFrames);
+		ImGui::TextColored(UI_WARNING, "已丢帧 %llu / 共 %llu", droppedFrames, totalFrames);
 	}
 	ImGui::Dummy(ImVec2(0.0f, 2.0f * scale));
 	ImGui::Separator();
-	ImGui::TextColored(UI_TEXT_SECONDARY, "View");
+	ImGui::TextColored(UI_TEXT_SECONDARY, "视图");
 	char viewText[48];
-	snprintf(viewText, sizeof(viewText), "%.1fx / %d deg", zoomLevel, rotationAngle);
+	snprintf(viewText, sizeof(viewText), "%.1fx / %d 度", zoomLevel, rotationAngle);
 	float viewTextWidth = m_pFontMono != NULL
 		? m_pFontMono->CalcTextSizeA(m_pFontMono->LegacySize, 1000.0f, 0.0f, viewText).x
 		: ImGui::CalcTextSize(viewText).x;
@@ -1141,75 +1159,75 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 
 	float actionGap = ImGui::GetStyle().ItemSpacing.x;
 	float actionWidth = (ImGui::GetContentRegionAvail().x - actionGap) * 0.5f;
-	if (ImGui::Button("Rotate 90##RotateView", ImVec2(actionWidth, 34.0f * scale))) {
+	if (ImGui::Button("旋转 90°##RotateView", ImVec2(actionWidth, 34.0f * scale))) {
 		if (pRotateView != NULL) *pRotateView = true;
 	}
-	ShowTooltip("Rotate the stream clockwise (R)");
+	ShowTooltip("顺时针旋转画面（R）");
 	ImGui::SameLine();
 	bool defaultView = zoomLevel <= 1.0001f && rotationAngle == 0;
 	if (defaultView) ImGui::BeginDisabled();
-	if (ImGui::Button("Reset view##ResetView", ImVec2(actionWidth, 34.0f * scale))) {
+	if (ImGui::Button("重置视图##ResetView", ImVec2(actionWidth, 34.0f * scale))) {
 		if (pResetView != NULL) *pResetView = true;
 	}
 	if (defaultView) ImGui::EndDisabled();
-	ShowTooltip("Return to fit-to-window at 0 degrees");
+	ShowTooltip("回到适配窗口、0 度");
 	if (ImGui::Button(pictureInPictureActive
-		? "Exit picture in picture##PictureInPicture"
-		: "Picture in picture##PictureInPicture",
+		? "退出画中画##PictureInPicture"
+		: "画中画##PictureInPicture",
 		ImVec2(-1.0f, 34.0f * scale))) {
 		if (pTogglePictureInPicture != NULL) *pTogglePictureInPicture = true;
 	}
 	ShowTooltip(pictureInPictureActive
-		? "Restore the normal receiver window (P)"
-		: "Keep a compact video window above other apps (P)");
-	if (ImGui::Button(capturePrivacyActive ? "Show in captures##CapturePrivacy" : "Hide from captures##CapturePrivacy",
+		? "恢复正常接收器窗口（P）"
+		: "在其他应用上方保留紧凑视频窗口（P）");
+	if (ImGui::Button(capturePrivacyActive ? "在截图中显示##CapturePrivacy" : "从截图中隐藏##CapturePrivacy",
 		ImVec2(-1.0f, 34.0f * scale))) {
 		if (pToggleCapturePrivacy != NULL) *pToggleCapturePrivacy = true;
 	}
 	ShowTooltip(capturePrivacyActive
-		? "Allow recording software to see the receiver again"
-		: "Keep the receiver visible locally, exclude it from capture, and black the clean feed");
+		? "允许录制软件再次看到接收器"
+		: "接收器本地可见，但从截取中排除，纯净输出为黑帧");
 	if (!captureExclusionAvailable) {
-		ImGui::TextColored(UI_WARNING, "Windows capture exclusion is unavailable.");
+		ImGui::TextColored(UI_WARNING, "Windows 截屏排除不可用。");
 	}
 
 	ImGui::Dummy(ImVec2(0.0f, 2.0f * scale));
 	ImGui::Separator();
-	ImGui::TextColored(UI_TEXT_PRIMARY, "Screen Cast");
-	if (ImGui::Checkbox("Enable Screen Cast mode", &m_screenCastEnabled)) {
+	ImGui::TextColored(UI_TEXT_PRIMARY, "屏幕投射");
+	if (ImGui::Checkbox("启用屏幕投射模式", &m_screenCastEnabled)) {
 		// CSDLPlayer applies the output transition on this render frame.
 	}
-	ShowTooltip("Keep controls visible locally while exposing a clean OBS video source");
+	ShowTooltip("本地保留控制栏可见，同时提供纯净的 OBS 视频源");
 	if (m_screenCastEnabled) {
 		ImGui::Indent(12.0f * scale);
-		if (ImGui::Checkbox("Hide interface from captures", &m_screenCastHideInterface)) {
+		if (ImGui::Checkbox("从截图中隐藏界面", &m_screenCastHideInterface)) {
 			// Uses Windows capture exclusion when the operating system supports it.
 		}
-		ShowTooltip("Hides this receiver window from Display Capture; use the clean-feed source in OBS");
-		if (ImGui::Checkbox("Crop clean feed to video", &m_screenCastCropToVideo)) {
+		ShowTooltip("将接收器窗口从显示器捕获中隐藏；请在 OBS 使用纯净输出源");
+		if (ImGui::Checkbox("纯净输出按视频裁剪", &m_screenCastCropToVideo)) {
 			// The output geometry updates from the next rendered frame.
 		}
-		ShowTooltip("Removes letterboxing and pillarboxing from the clean OBS feed");
+		ShowTooltip("移除 OBS 纯净输出的黑边");
 
 		ImGui::TextColored(cleanFeedReady ? UI_SUCCESS : UI_WARNING,
-			"Share source: AirPlay Receiver - Clean Feed");
-		ShowTooltip("Select this source in OBS Window Capture or Discord's Applications picker");
+			"共享源：AirPlay Receiver - Clean Feed");
+		ShowTooltip("在 OBS 窗口捕获或 Discord 应用选择器中选择此源");
 		if (!cleanFeedReady) {
 			ImGui::TextColored(UI_WARNING,
-				"Clean feed is waiting for its renderer to start");
+				"纯净输出正在等待渲染器启动");
 		}
 		if (m_screenCastHideInterface && !captureExclusionAvailable) {
 			ImGui::TextColored(UI_WARNING,
-				"Display Capture protection is unavailable on this Windows version");
+				"此 Windows 版本不支持显示器捕获保护");
 		}
 		ImGui::Unindent(12.0f * scale);
 	}
 
 	ImGui::Dummy(ImVec2(0.0f, 2.0f * scale));
 	ImGui::Separator();
-	ImGui::TextColored(UI_TEXT_PRIMARY, "Quality");
+	ImGui::TextColored(UI_TEXT_PRIMARY, "质量");
 	const char* qualityLabels[3] = {
-		"30 fps / Best", "60 fps / Balanced", "60 fps / Low latency"
+		"30 fps / 最佳", "60 fps / 均衡", "60 fps / 低延迟"
 	};
 	int qualityIndex = (int)m_qualityPreset;
 	ImGui::SetNextItemWidth(-1.0f);
@@ -1223,14 +1241,14 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 	int senderPct = (int)(Clamp01(m_deviceVolume) * 100.0f + 0.5f);
 	int inputPct = (int)(Clamp01(m_currentAudioLevel) * 100.0f + 0.5f);
 	char audioLevels[48];
-	snprintf(audioLevels, sizeof(audioLevels), "Sender %d%%  Input %d%%", senderPct, inputPct);
-	ImGui::TextColored(UI_TEXT_PRIMARY, "Audio");
+	snprintf(audioLevels, sizeof(audioLevels), "发送 %d%%  输入 %d%%", senderPct, inputPct);
+	ImGui::TextColored(UI_TEXT_PRIMARY, "音频");
 	float audioLevelsWidth = ImGui::CalcTextSize(audioLevels).x;
 	ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - audioLevelsWidth);
 	ImGui::TextColored(UI_TEXT_MUTED, "%s", audioLevels);
 
 	int localPct = (int)(m_localVolume * 100.0f + 0.5f);
-	ImGui::TextColored(UI_TEXT_SECONDARY, "Output volume");
+	ImGui::TextColored(UI_TEXT_SECONDARY, "输出音量");
 	char volumeText[16];
 	snprintf(volumeText, sizeof(volumeText), "%d%%", localPct);
 	float volumeTextWidth = m_pFontMono != NULL
@@ -1244,14 +1262,14 @@ void CImGuiManager::RenderOverlay(const char* deviceName, bool isConnected, cons
 	if (ImGui::SliderInt("##OutputVolume", &localPct, 0, 100, "", ImGuiSliderFlags_AlwaysClamp)) {
 		m_localVolume = localPct / 100.0f;
 	}
-	ShowTooltip("Playback volume on this PC");
+	ShowTooltip("本机播放音量");
 
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f * scale, 3.0f * scale));
-	if (ImGui::Checkbox("Normalize loud audio", &m_bAutoAdjust)) {
+	if (ImGui::Checkbox("自动平衡过大音量", &m_bAutoAdjust)) {
 		// State is consumed by CSDLPlayer on the same render loop.
 	}
 	ImGui::PopStyleVar();
-	ShowTooltip("Reduces sudden peaks while keeping quieter audio unchanged");
+	ShowTooltip("压低突发峰值，保留轻柔音频不变");
 
 	ImGui::End();
 	ImGui::PopStyleVar(3);
@@ -1288,7 +1306,7 @@ void CImGuiManager::RenderPictureInPictureControls(bool* pExitPictureInPicture)
 		pExitPictureInPicture != NULL) {
 		*pExitPictureInPicture = true;
 	}
-	ShowTooltip("Restore the normal receiver window (P)");
+	ShowTooltip("恢复正常接收器窗口（P）");
 	ImGui::End();
 	ImGui::PopStyleVar(2);
 }
@@ -1415,15 +1433,15 @@ void CImGuiManager::RenderPerfGraphs(const SPerfData& perf, bool* pOpen)
 	float closeSize = 28.0f * scale;
 	float headerY = ImGui::GetCursorPosY();
 	if (m_pFontHeading != NULL) ImGui::PushFont(m_pFontHeading);
-	ImGui::TextColored(UI_TEXT_PRIMARY, "Diagnostics");
+	ImGui::TextColored(UI_TEXT_PRIMARY, "诊断");
 	if (m_pFontHeading != NULL) ImGui::PopFont();
 	ImGui::SameLine();
-	ImGui::TextColored(UI_TEXT_MUTED, "30 s");
+	ImGui::TextColored(UI_TEXT_MUTED, "30 秒");
 	ImGui::SetCursorPos(ImVec2(ImGui::GetWindowContentRegionMax().x - closeSize, headerY));
 	if (DrawCloseButton("##ClosePerformance", closeSize, scale)) {
 		*pOpen = false;
 	}
-	ShowTooltip("Close performance panel (F1)");
+	ShowTooltip("关闭性能面板（F1）");
 	ImGui::SetCursorPosY(headerY + closeSize + 2.0f * scale);
 
 	char sourceFps[24];
@@ -1446,49 +1464,49 @@ void CImGuiManager::RenderPerfGraphs(const SPerfData& perf, bool* pOpen)
 		ImGui::TableSetupColumn("LabelB", ImGuiTableColumnFlags_WidthFixed, 58.0f * scale);
 		ImGui::TableSetupColumn("ValueB", ImGuiTableColumnFlags_WidthStretch);
 		ImGui::TableNextRow();
-		DrawMetricPair("Source", sourceFps, m_pFontMono);
-		DrawMetricPair("Display", displayFps, m_pFontMono);
+		DrawMetricPair("源", sourceFps, m_pFontMono);
+		DrawMetricPair("显示", displayFps, m_pFontMono);
 		ImGui::TableNextRow();
-		DrawMetricPair("Frame", frameTime, m_pFontMono);
-		DrawMetricPair("Latency", latency, m_pFontMono);
+		DrawMetricPair("帧", frameTime, m_pFontMono);
+		DrawMetricPair("延迟", latency, m_pFontMono);
 		ImGui::TableNextRow();
-		DrawMetricPair("Bitrate", bitrate, m_pFontMono);
-		DrawMetricPair("Buffer", audioQueue, m_pFontMono);
+		DrawMetricPair("码率", bitrate, m_pFontMono);
+		DrawMetricPair("缓冲", audioQueue, m_pFontMono);
 		ImGui::EndTable();
 	}
 
 	ImGui::Dummy(ImVec2(0.0f, 2.0f * scale));
 	ImGui::Separator();
-	ImGui::TextColored(UI_TEXT_PRIMARY, "History");
+	ImGui::TextColored(UI_TEXT_PRIMARY, "历史");
 	if (ImGui::BeginTable("##PrimaryCharts", 2,
 		ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_NoSavedSettings)) {
 		ImGui::TableNextColumn();
-		DrawPerfChart("Frame time", NULL, "33 ms", perf.frameTimeHistory,
+		DrawPerfChart("帧时间", NULL, "33 ms", perf.frameTimeHistory,
 			perf.historySize, perf.currentIdx, 0.0f, 33.0f,
 			UI_ACCENT, 16.67f, m_pFontMono, scale);
 		ImGui::TableNextColumn();
-		DrawPerfChart("Bitrate", NULL, "50", perf.bitrateHistory,
+		DrawPerfChart("码率", NULL, "50", perf.bitrateHistory,
 			perf.historySize, perf.currentIdx, 0.0f, 50.0f,
 			UI_ACCENT, -1.0f, m_pFontMono, scale);
 		ImGui::EndTable();
 	}
-	if (ImGui::CollapsingHeader("More charts")) {
+	if (ImGui::CollapsingHeader("更多图表")) {
 		if (ImGui::BeginTable("##SecondaryCharts", 2,
 			ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_NoSavedSettings)) {
 			ImGui::TableNextColumn();
-			DrawPerfChart("Source FPS", NULL, "80", perf.sourceFpsHistory,
+			DrawPerfChart("源 FPS", NULL, "80", perf.sourceFpsHistory,
 				perf.historySize, perf.currentIdx, 0.0f, 80.0f,
 				UI_ACCENT, -1.0f, m_pFontMono, scale);
 			ImGui::TableNextColumn();
-			DrawPerfChart("Display FPS", NULL, "80", perf.displayFpsHistory,
+			DrawPerfChart("显示 FPS", NULL, "80", perf.displayFpsHistory,
 				perf.historySize, perf.currentIdx, 0.0f, 80.0f,
 				UI_ACCENT, perf.targetFps, m_pFontMono, scale);
 			ImGui::TableNextColumn();
-			DrawPerfChart("Decode latency", NULL, "33 ms", perf.latencyHistory,
+			DrawPerfChart("解码延迟", NULL, "33 ms", perf.latencyHistory,
 				perf.historySize, perf.currentIdx, 0.0f, 33.0f,
 				UI_ACCENT, 16.67f, m_pFontMono, scale);
 			ImGui::TableNextColumn();
-			DrawPerfChart("Audio buffer", NULL, "20", perf.audioQueueHistory,
+			DrawPerfChart("音频缓冲", NULL, "20", perf.audioQueueHistory,
 				perf.historySize, perf.currentIdx, 0.0f, 20.0f,
 				UI_ACCENT, -1.0f, m_pFontMono, scale);
 			ImGui::EndTable();
@@ -1497,7 +1515,7 @@ void CImGuiManager::RenderPerfGraphs(const SPerfData& perf, bool* pOpen)
 
 	ImGui::Dummy(ImVec2(0.0f, 2.0f * scale));
 	ImGui::Separator();
-	ImGui::TextColored(UI_TEXT_PRIMARY, "Session");
+	ImGui::TextColored(UI_TEXT_PRIMARY, "会话");
 
 	char videoInfo[64] = "--";
 	char dataInfo[48] = "0 MB";
@@ -1519,15 +1537,15 @@ void CImGuiManager::RenderPerfGraphs(const SPerfData& perf, bool* pOpen)
 		snprintf(dataInfo, sizeof(dataInfo), "%.1f MB", (float)perf.totalBytes / 1048576.0f);
 	}
 	if (perf.droppedFrames > 0) {
-		snprintf(frameInfo, sizeof(frameInfo), "%llu | %llu dropped", perf.totalFrames, perf.droppedFrames);
+		snprintf(frameInfo, sizeof(frameInfo), "%llu | 丢 %llu", perf.totalFrames, perf.droppedFrames);
 	} else {
-		snprintf(frameInfo, sizeof(frameInfo), "%llu | stable", perf.totalFrames);
+		snprintf(frameInfo, sizeof(frameInfo), "%llu | 稳定", perf.totalFrames);
 	}
 	if (perf.audioUnderruns > 0 || perf.audioDropped > 0) {
-		snprintf(audioInfo, sizeof(audioInfo), "%d underruns | %d dropped",
+		snprintf(audioInfo, sizeof(audioInfo), "%d 欠载 | 丢 %d",
 			perf.audioUnderruns, perf.audioDropped);
 	} else {
-		strcpy_s(audioInfo, sizeof(audioInfo), "Stable");
+		strcpy_s(audioInfo, sizeof(audioInfo), "稳定");
 	}
 	if (perf.connectionTimeSec > 0.0f) {
 		int totalSec = (int)perf.connectionTimeSec;
@@ -1543,11 +1561,11 @@ void CImGuiManager::RenderPerfGraphs(const SPerfData& perf, bool* pOpen)
 		ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_NoSavedSettings)) {
 		ImGui::TableSetupColumn("Metric", ImGuiTableColumnFlags_WidthFixed, 90.0f * scale);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
-		DrawStatRow("Video", videoInfo, m_pFontMono);
-		DrawStatRow("Transferred", dataInfo, m_pFontMono);
-		DrawStatRow("Frames", frameInfo, m_pFontMono);
-		DrawStatRow("Audio", audioInfo, m_pFontMono);
-		DrawStatRow("Uptime", uptime, m_pFontMono);
+		DrawStatRow("视频", videoInfo, m_pFontMono);
+		DrawStatRow("已传输", dataInfo, m_pFontMono);
+		DrawStatRow("帧数", frameInfo, m_pFontMono);
+		DrawStatRow("音频", audioInfo, m_pFontMono);
+		DrawStatRow("运行时长", uptime, m_pFontMono);
 		ImGui::EndTable();
 	}
 
@@ -1687,9 +1705,9 @@ void CImGuiManager::RenderDisconnectMessage(const char* deviceName, float visibi
 
 	char heading[384];
 	if (deviceName != NULL && deviceName[0] != '\0') {
-		snprintf(heading, sizeof(heading), "%s disconnected", deviceName);
+		snprintf(heading, sizeof(heading), "%s 已断开", deviceName);
 	} else {
-		strcpy_s(heading, sizeof(heading), "Stream disconnected");
+		strcpy_s(heading, sizeof(heading), "串流已断开");
 	}
 	if (m_pFontHeading != NULL) ImGui::PushFont(m_pFontHeading);
 	ImVec2 headingSize = ImGui::CalcTextSize(heading);
@@ -1702,7 +1720,7 @@ void CImGuiManager::RenderDisconnectMessage(const char* deviceName, float visibi
 		heading, NULL, &headingSize);
 	if (m_pFontHeading != NULL) ImGui::PopFont();
 
-	const char* detail = "Waiting for another device";
+	const char* detail = "正在等待其他设备";
 	ImVec2 detailSize = ImGui::CalcTextSize(detail);
 	ImGui::SetCursorPos(ImVec2((screenW - detailSize.x) * 0.5f,
 		screenH * 0.5f + 7.0f * scale));

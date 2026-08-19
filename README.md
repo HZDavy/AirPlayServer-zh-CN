@@ -1,10 +1,14 @@
-# AirPlayServer for Windows
+# AirPlayServer 中文版（汉化）
 
-AirPlayServer receives AirPlay video, audio, and screen mirroring on Windows.
+> 本仓库是 [xenos1337/AirPlayServer](https://github.com/xenos1337/AirPlayServer) 的**简体中文汉化版**，在 MIT 协议下 fork 并修改 UI 界面、窗口标题、提示文案、README 等所有用户可见文本，方便中文用户使用。所有原项目功能、协议实现、性能特性保持不变。
+>
+> 原作者保留全部代码版权。本汉化版仅做本地化工作，不修改 AirPlay 协议、解码、网络等核心逻辑。如需了解原始英文版，请访问 [上游仓库](https://github.com/xenos1337/AirPlayServer)。
+>
+> 上游声明：原项目本身是 [fingergit/airplay2-win](https://github.com/fingergit/airplay2-win) 的更新 fork。
 
-This project is an updated fork of [fingergit/airplay2-win](https://github.com/fingergit/airplay2-win).
+AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 
-## Main Screen
+## 主界面
 <div align="center">
     <img style="height: 512px; width: auto;" src="https://github.com/user-attachments/assets/ffedab29-b483-467d-991a-4060503b0fc0" />
 </div>
@@ -12,8 +16,8 @@ This project is an updated fork of [fingergit/airplay2-win](https://github.com/f
 <div align="center">
     <table>
         <tr>
-            <th>Settings</th>
-            <th>Pin Approval</th>
+            <th>设置</th>
+            <th>PIN 审批</th>
         </tr>
         <tr>
             <td>
@@ -26,17 +30,17 @@ This project is an updated fork of [fingergit/airplay2-win](https://github.com/f
     </table>
 </div>
 
-## Viewer
+## 查看器
 <div align="center">
     <img style="height: 720px; width: auto;" src="https://github.com/user-attachments/assets/9b0c071e-070a-43f0-89b5-a936d4c11ea7" />
 </div>
 
-## 
+##
 <div align="center">
     <table>
         <tr>
-            <th>Controls</th>
-            <th>PIP (Picture in Picture) Mode</th>
+            <th>控制栏</th>
+            <th>画中画模式</th>
         </tr>
         <tr>
             <td>
@@ -49,159 +53,154 @@ This project is an updated fork of [fingergit/airplay2-win](https://github.com/f
     </table>
 </div>
 
-## Install
+## 安装
 
-1. Download [AirPlay2-Win-x64.zip](https://github.com/xenos1337/AirPlayServer/releases/latest).
-2. Extract the archive.
-3. Install [Bonjour for Windows](https://support.apple.com/kb/DL999) if it is not already installed. iTunes also includes Bonjour.
-4. Run `AirPlayServer.exe`.
+1. 从 [Releases](https://github.com/xenos1337/AirPlayServer/releases/latest) 下载 `AirPlay2-Win-x64.zip`（沿用上游发布包）。
+2. 解压压缩包。
+3. 如尚未安装，请安装 [Bonjour for Windows](https://support.apple.com/kb/DL999)。iTunes 也内置 Bonjour。
+4. 运行 `AirPlayServer.exe`。
 
-The app warns you at startup if Bonjour is missing or its service is not running.
+启动时若未安装 Bonjour 或服务未运行，应用会弹出中文提示。
 
-### Requirements
+### 系统要求
 
-- Windows 10 or later, x64
-- Apple Bonjour for Windows, used for device discovery over mDNS
+- Windows 10 及以上，x64
+- Apple Bonjour for Windows，用于通过 mDNS 进行设备发现
 
-## Features
+## 功能特性
 
-- AirPlay video, audio, and screen mirroring from iOS and macOS
-- 30 and 60 FPS quality presets
-- GPU texture upload and YUV to RGB conversion
-- Frame pacing for smoother playback
-- Live window resizing
-- Receiver resolution matched to a monitor or set manually
-- Automatic Bonjour service advertisement
+- 接收 iOS 与 macOS 的 AirPlay 视频、音频和屏幕镜像
+- 30 与 60 FPS 画质预设
+- GPU 纹理上传与 YUV 转 RGB
+- 帧节奏控制，播放更平滑
+- 实时窗口缩放
+- 接收端分辨率可匹配显示器或手动设置
+- 自动 Bonjour 服务广播
 
-## Use AirPlayServer
+## 使用方法
 
-1. Start AirPlayServer.
-2. Open Control Center on an iPhone or iPad, or open the AirPlay menu on a Mac.
-3. Select the Windows PC from the list.
-4. Start mirroring or playback.
+1. 启动 AirPlayServer。
+2. 在 iPhone 或 iPad 上打开控制中心，或在 Mac 上打开 AirPlay 菜单。
+3. 从列表中选择这台 Windows PC。
+4. 开始镜像或播放。
 
-### Receiver resolution
+### 接收端分辨率
 
-Open `Settings` and use `AirPlay resolution` to control the display size advertised to macOS. `Match receiver monitor` is the default: while the receiver is idle, move its window to the Windows monitor you want to match. The advertised size follows that monitor's current mode.
+打开「设置」，用「AirPlay 分辨率」控制向 macOS 广播的显示尺寸。默认为「匹配接收端显示器」：接收端空闲时，将窗口拖到你想匹配的 Windows 显示器上，广播尺寸会跟随该显示器当前模式。
 
-Select `Custom` to enter an exact width and height, such as `1920 x 1080` or `2560 x 1440`. Resolution changes are applied when the receiver is idle. Stop and reconnect Screen Mirroring on the Mac to negotiate the new size; an active stream is never interrupted.
+选择「自定义」可输入精确宽高，例如 `1920 x 1080` 或 `2560 x 1440`。分辨率更改在接收端空闲时应用；Mac 上需要停止并重连屏幕镜像以协商新尺寸，活跃流不会被中断。
 
-### Debug logging
+### 调试日志
 
-To collect diagnostics for playback or audio-output switching issues, start the
-server with `AirPlayServer.exe --debug`. A new timestamped log is written for
-each run under `%LOCALAPPDATA%\AirPlayServer\logs` (or the system temporary
-directory if `LOCALAPPDATA` is unavailable). The log includes startup and
-shutdown, connection/device identifiers, AirPlay protocol messages, playback
-and volume callbacks, thread IDs, and unhandled exception details. Debug mode
-is opt-in and does not create log files during normal launches.
+为收集播放或音频输出切换问题的诊断信息，使用 `AirPlayServer.exe --debug` 启动服务器。每次运行会在 `%LOCALAPPDATA%\AirPlayServer\logs`（或系统临时目录）下生成新的带时间戳的日志。日志包含启动与关闭、连接/设备标识、AirPlay 协议消息、播放与音量回调、线程 ID 以及未处理异常详情。调试模式为可选，正常启动不会生成日志文件。
 
-### Optional AirPlay PIN
+### 可选 AirPlay PIN
 
-Enable `Require PIN` from the home screen to approve new connections with a temporary four-digit code. The PIN exists only in memory for the current server session and is never written to disk.
+在主界面启用「需要 PIN」，可用临时四位数字代码审批新连接。PIN 仅保存在当前服务器会话的内存中，绝不写入磁盘。
 
-`Hide PIN from screen capture` protects the code from supported Windows recording APIs. After you accept a connection, AirPlayServer enables capture exclusion and waits one second before displaying the PIN locally. The exclusion remains active until the device connects or you cancel. If Windows cannot enable capture exclusion, the app does not display the PIN.
+「从截图中隐藏 PIN」可保护代码不被支持的 Windows 录像 API 捕获。你接受连接后，AirPlayServer 会启用捕获排除，等待一秒再在本地显示 PIN。该排除在设备连接或你取消前一直有效。若 Windows 无法启用捕获排除，应用将不显示 PIN。
 
-### Controls
+### 控制键
 
-| Key | Action |
+| 按键 | 操作 |
 |-----|--------|
-| `H` | Toggle session controls |
-| `Ctrl+Shift+H` | Toggle capture privacy |
-| `P` | Toggle picture-in-picture mode |
-| `F` or double-click | Toggle fullscreen |
-| `F1` | Toggle diagnostics while connected |
-| `R` | Rotate video 90 degrees clockwise |
-| Mouse wheel | Zoom from fit to 5x |
-| Left-drag while zoomed | Pan the video |
-| Mouse movement | Show the cursor; it hides after five seconds |
+| `H` | 切换会话控制栏 |
+| `Ctrl+Shift+H` | 切换截屏隐私 |
+| `P` | 切换画中画模式 |
+| `F` 或双击 | 切换全屏 |
+| `F1` | 连接时切换诊断信息 |
+| `R` | 视频顺时针旋转 90° |
+| 鼠标滚轮 | 从适配到 5x 缩放 |
+| 缩放时左键拖拽 | 平移视频 |
+| 鼠标移动 | 显示光标；五秒后自动隐藏 |
 
-The session controls include `Hide from captures`. This keeps the receiver visible on the local monitor, excludes its main window from supported Windows capture APIs, and sends a black frame to the clean feed. Select `Show in captures` or press `Ctrl+Shift+H` to turn it off.
+会话控制栏包含「从截图中隐藏」。它使接收端在本地显示器上保持可见，将其主窗口从支持的 Windows 捕获 API 中排除，并向纯净流发送黑帧。选择「在截图中显示」或按 `Ctrl+Shift+H` 可关闭。
 
-Select `Picture in picture` or press `P` to open a small, borderless window that stays above other apps. PiP uses the current device's aspect ratio when resized. Move the pointer over the window to reveal the close button. You can drag the invisible strip along the top to move it. Press `P` again to restore the previous window size, position, and maximized state. PiP also closes when the device disconnects.
+选择「画中画」或按 `P`，可打开一个置顶的小型无边框窗口。画中画窗口缩放时使用当前设备的宽高比。将指针移到窗口上方可显示关闭按钮；可拖动窗口顶部的不可见条带移动位置。再次按 `P` 可恢复之前的窗口尺寸、位置和最大化状态。设备断开时画中画也会关闭。
 
-### Screen Cast and the OBS clean feed
+### 屏幕广播与 OBS 纯净流
 
-Enable `Screen Cast mode` from the session controls to create a separate video-only window named `AirPlay Receiver - Clean Feed`. The normal receiver window remains available on the local display.
+在会话控制栏启用「屏幕广播模式」，会创建一个名为 `AirPlay Receiver - Clean Feed` 的纯视频窗口。本地显示器上仍保留正常的接收端窗口。
 
-To use it in OBS:
+在 OBS 中使用：
 
-1. Add a Window Capture source and choose the Windows 10/11 capture method.
-2. Select `AirPlay Receiver - Clean Feed`.
-3. Turn off `Capture Cursor` in OBS.
+1. 添加「窗口捕获」源，选择 Windows 10/11 捕获方式。
+2. 选择 `AirPlay Receiver - Clean Feed`。
+3. 在 OBS 中关闭「捕获光标」。
 
-In Discord, open `Share Your Screen`, choose `Applications`, and select `AirPlay Receiver - Clean Feed`. The window exists only while a device is connected and AirPlayServer is rendering video.
+在 Discord 中打开「共享屏幕」，选择「应用程序」，再选 `AirPlay Receiver - Clean Feed`。该窗口仅在设备已连接且 AirPlayServer 正在渲染视频时存在。
 
-The clean feed follows rotation, zoom, pan, and receiver window resizing. `Crop clean feed to video` removes letterboxing and pillarboxing. AirPlayServer hides the clean feed between sessions and restores it after a device reconnects.
+纯净流跟随旋转、缩放、平移以及接收端窗口缩放。「裁剪纯净流到视频」可去除黑边。AirPlayServer 在会话间隐藏纯净流，设备重连后恢复。
 
-`Hide interface from captures` excludes the local receiver from supported Display Capture paths on Windows 10 version 2004 and later. It is meant to keep controls out of a presentation. It is not DRM. Use Window Capture in OBS for the clean feed.
+「从截图中隐藏界面」可在 Windows 10 2004 及以上版本上将本地接收端从支持的显示捕获路径中排除，用于在演示中隐藏控制栏。它不是 DRM。OBS 中请使用窗口捕获获取纯净流。
 
-### Quality presets
+### 画质预设
 
-You can change the preset from the session controls while video is playing.
+视频播放时可在会话控制栏中切换预设。
 
-| Preset | FPS | Scaling | Intended use |
+| 预设 | FPS | 缩放 | 用途 |
 |--------|-----|---------|--------------|
-| Best | 30 | Best available | Sharpest image |
-| Balanced | 60 | Best available | Default setting |
-| Low latency | 60 | Linear | Fastest response |
+| 最佳 | 30 | 最佳可用 | 最清晰画面 |
+| 均衡 | 60 | 最佳可用 | 默认设置 |
+| 低延迟 | 60 | 线性 | 响应最快 |
 
-## Troubleshooting
+## 故障排查
 
-### The device does not appear
+### 设备未出现
 
-- Check that Bonjour is installed and that `Bonjour Service` is running in `services.msc`.
-- Put both devices on the same Wi-Fi network and subnet.
-- Allow AirPlayServer through Windows Firewall on private networks.
+- 检查 Bonjour 已安装，且 `services.msc` 中 `Bonjour Service` 正在运行。
+- 确保两台设备在同一 Wi-Fi 网络与子网。
+- 在 Windows 防火墙允许 AirPlayServer 通过专用网络。
 
-### The device connects but video or audio does not play
+### 设备已连接但视频或音频不播放
 
-- If Windows is running in a virtual machine, use bridged networking instead of NAT.
-- Disconnect any VPN or proxy that may be intercepting the local connection.
+- 若 Windows 运行在虚拟机中，请使用桥接网络而非 NAT。
+- 断开任何可能拦截本地连接的 VPN 或代理。
 
-## Build from source
+## 从源码构建
 
-You need Visual Studio 2022 with the v143 toolset and a Windows 10 SDK.
+需要 Visual Studio 2022 与 v143 工具集，以及 Windows 10 SDK。
 
-1. Clone the repository:
+1. 克隆仓库：
 
    ```bash
    git clone https://github.com/xenos1337/AirPlayServer.git
    ```
 
-2. Open `AirPlay.sln` in Visual Studio.
-3. In Solution Explorer, right-click `AirPlayServer` and select `Set as Startup Project`.
-4. Build with `Ctrl+B` or run with `F5`.
+2. 在 Visual Studio 中打开 `AirPlay.sln`。
+3. 在解决方案资源管理器中右键 `AirPlayServer`，选择「设为启动项目」。
+4. 用 `Ctrl+B` 构建，或 `F5` 运行。
 
-The Debug executable is written to `x64\Debug\AirPlayServer.exe`.
+Debug 可执行文件输出到 `x64\Debug\AirPlayServer.exe`。
 
-## Project layout
+## 项目结构
 
 ```text
 AirPlayServer/
-|-- AirPlayServer/           # Windows GUI, SDL2, and ImGui
-|   |-- CSDLPlayer.cpp       # Video and audio playback
-|   |-- CImGuiManager.cpp    # Home screen and session controls
-|   |-- CAirServer.cpp       # AirPlay server wrapper
+|-- AirPlayServer/           # Windows GUI、SDL2 与 ImGui
+|   |-- CSDLPlayer.cpp       # 视频与音频播放
+|   |-- CImGuiManager.cpp    # 主界面与会话控制栏
+|   |-- CAirServer.cpp       # AirPlay 服务器封装
 |   `-- CAirServerCallback.cpp
-|-- AirPlayServerLib/        # AirPlay 2 protocol library
-|   `-- lib/                 # RAOP, pairing, crypto, and codecs
-|-- airplay2dll/             # DLL wrapper and FFmpeg H.264 decoder
-|-- dnssd/                   # Bonjour discovery DLL
-|-- external/                # SDL2, FFmpeg, ImGui, and other dependencies
+|-- AirPlayServerLib/        # AirPlay 2 协议库
+|   `-- lib/                 # RAOP、配对、加密与编解码器
+|-- airplay2dll/             # DLL 封装与 FFmpeg H.264 解码器
+|-- dnssd/                   # Bonjour 发现 DLL
+|-- external/                # SDL2、FFmpeg、ImGui 等依赖
 `-- AirPlay.sln
 ```
 
-## Contributing
+## 贡献
 
-Bug reports, feature requests, and pull requests are welcome. Follow the existing C++ and Windows API style, test on Windows 10 or 11, and update the documentation when behavior changes.
+欢迎提交 Bug 报告、功能请求和 Pull Request。请遵循现有的 C++ 与 Windows API 风格，在 Windows 10 或 11 上测试，并在行为变化时更新文档。
 
-## License
+## 许可证
 
-The repository contains code from several libraries. Check each library's license for its terms.
+本仓库包含多个库的代码。各库许可证请查阅对应文件。本汉化版遵循上游 MIT 协议保留原作者版权声明。
 
-## Credits
+## 致谢
 
-Thanks to [fingergit](https://github.com/fingergit/airplay2-win) and the AirPlay reverse engineering community.
+- 汉化版基于 [xenos1337/AirPlayServer](https://github.com/xenos1337/AirPlayServer)。
+- 上游感谢 [fingergit](https://github.com/fingergit/airplay2-win) 与 AirPlay 逆向工程社区。
 
-This is an unofficial implementation. Apple, AirPlay, and related trademarks belong to Apple Inc.
+本实现为非官方实现。Apple、AirPlay 及相关商标归 Apple Inc. 所有。

@@ -1,4 +1,4 @@
-﻿// AirPlayServer.cpp : AirPlay Receiver - Main Program
+// AirPlayServer.cpp : AirPlay Receiver - Main Program
 // Starts automatically and waits for AirPlay connections.
 // Window shows home screen with ImGui UI.
 //
@@ -44,15 +44,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     const bool debugRequested = lpCmdLine &&
         (strstr(lpCmdLine, "--debug") != NULL || strstr(lpCmdLine, "/debug") != NULL);
     if (DebugLogger::Start(lpCmdLine)) {
-        std::string message = "Debug logging is enabled.\n\nLog file:\n" + DebugLogger::Path();
-        MessageBoxA(NULL, message.c_str(), "AirPlayServer - Debug Logging",
+        std::string logPath = DebugLogger::Path();
+        std::wstring wPath;
+        int pathWLen = MultiByteToWideChar(CP_ACP, 0, logPath.c_str(), (int)logPath.length(), NULL, 0);
+        if (pathWLen > 0) {
+            wPath.resize(pathWLen);
+            MultiByteToWideChar(CP_ACP, 0, logPath.c_str(), (int)logPath.length(), &wPath[0], pathWLen);
+        }
+        std::wstring wmsg = L"调试日志已启用。\n\n日志文件：\n" + wPath;
+        MessageBoxW(NULL, wmsg.c_str(), L"AirPlayServer - 调试日志",
             MB_OK | MB_ICONINFORMATION);
     }
     else if (debugRequested) {
-        MessageBoxA(NULL,
-            "Debug logging was requested, but the log file could not be created.\n\n"
-            "Check that %LOCALAPPDATA% is writable and try again.",
-            "AirPlayServer - Debug Logging Error", MB_OK | MB_ICONERROR);
+        MessageBoxW(NULL,
+            L"已请求调试日志，但无法创建日志文件。\n\n"
+            L"请检查 %LOCALAPPDATA% 是否可写后重试。",
+            L"AirPlayServer - 调试日志错误", MB_OK | MB_ICONERROR);
     }
     DebugLogger::Write("startup", "AirPlayServer starting; pid=%lu", GetCurrentProcessId());
 
@@ -117,11 +124,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             {
                 // Truly not installed
                 CloseServiceHandle(hSCM);
-                int choice = MessageBoxA(NULL,
-                    "Apple Bonjour is not installed.\n\n"
-                    "Bonjour is required for AirPlay device discovery.\n\n"
-                    "Click OK to open the Bonjour download page, or Cancel to exit.",
-                    "AirPlay Server - Bonjour Not Found",
+                int choice = MessageBoxW(NULL,
+                    L"未安装 Apple Bonjour。\n\n"
+                    L"AirPlay 设备发现需要 Bonjour。\n\n"
+                    L"点击“确定”打开 Bonjour 下载页，或点击“取消”退出。",
+                    L"AirPlay Server - 未找到 Bonjour",
                     MB_OKCANCEL | MB_ICONWARNING);
                 if (choice == IDOK)
                     ShellExecuteA(NULL, "open", "https://support.apple.com/kb/DL999",
@@ -145,12 +152,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                             DWORD err = GetLastError();
                             if (err != ERROR_SERVICE_ALREADY_RUNNING)
                             {
-                                char msg[256];
-                                _snprintf_s(msg, sizeof(msg), _TRUNCATE,
-                                    "Bonjour Service could not be started (error %lu).\n\n"
-                                    "Try running as Administrator, or start the service manually via services.msc.",
+                                wchar_t msg[256];
+                                _snwprintf_s(msg, sizeof(msg)/sizeof(msg[0]), _TRUNCATE,
+                                    L"Bonjour 服务无法启动（错误 %lu）。\n\n"
+                                    L"请尝试以管理员身份运行，或通过 services.msc 手动启动该服务。",
                                     err);
-                                MessageBoxA(NULL, msg, "AirPlay Server - Bonjour Error",
+                                MessageBoxW(NULL, msg, L"AirPlay Server - Bonjour 错误",
                                     MB_OK | MB_ICONWARNING);
                                 CloseServiceHandle(hSvc);
                                 CloseServiceHandle(hSCM);
@@ -173,10 +180,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     else
                     {
                         // No permission to start — ask user to do it manually
-                        MessageBoxA(NULL,
-                            "Bonjour Service is installed but not running.\n\n"
-                            "Try running as Administrator, or start the service manually via services.msc.",
-                            "AirPlay Server - Bonjour Stopped",
+                        MessageBoxW(NULL,
+                            L"Bonjour 服务已安装但未运行。\n\n"
+                            L"请尝试以管理员身份运行，或通过 services.msc 手动启动该服务。",
+                            L"AirPlay Server - Bonjour 已停止",
                             MB_OK | MB_ICONWARNING);
                         CloseServiceHandle(hSvc);
                         CloseServiceHandle(hSCM);

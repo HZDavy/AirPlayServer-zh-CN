@@ -47,7 +47,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
                 <img src="screenshots/session-controls.png" width="420" />
             </td>
             <td>
-                <img src="screenshots/fullscreen-overlay.png" width="420" />
+                <img src="https://github.com/user-attachments/assets/b98681b5-f79a-493e-b9af-c1cd6a89c8c9" width="420" />
             </td>
         </tr>
     </table>

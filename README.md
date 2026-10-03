@@ -69,7 +69,7 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 
 ## 功能特性
 
-- 接收 iOS 与 macOS 的 AirPlay 视频、音频和屏幕镜像
+- 接收 iOS 与 macOS 的 AirPlay 视频、音频和屏幕镜像；不广播独立的 URL/HLS 播放支持
 - 30 与 60 FPS 画质预设
 - GPU 纹理上传与 YUV 转 RGB
 - 帧节奏控制，播放更平滑
@@ -158,12 +158,23 @@ AirPlayServer 在 Windows 上接收 AirPlay 视频、音频和屏幕镜像。
 - 若 Windows 运行在虚拟机中，请使用桥接网络而非 NAT。
 - 断开任何可能拦截本地连接的 VPN 或代理。
 
+## 无头适配器（Headless Adapter）
+
+`MirrorSimAdapter` 附属程序对外暴露 `0.8.0` 协议，通过 JSONL 提供：受限长度的 H.264 访问单元、交错的 16 位有符号 PCM 音频事件、发送端音量变化、接收端上报的源/视频几何信息，以及显式的镜像发送端暂停/恢复事件。源屏幕形状会提供方向信息，不会把独立的横屏媒体表面误判为旋转后的手机。视频和音频序列化运行在受限长度的工作队列上，因此繁忙的桌面客户端不会阻塞 AirPlay 网络回调；过载时视频输出会丢弃到下一个解码器关键帧，而非累积无限积压，重复的纯编码包会被去重。
+
+当宿主设置 `MIRRORSIM_EXTERNAL_DNSSD=1` 时，无头适配器会跳过自身的 Bonjour 客户端注册，由宿主自行广播 `_airplay._tcp` 和 `_raop._tcp`。`MIRRORSIM_HARDWARE_ADDRESS` 接受共享的 12 位十六进制发现标识，使 AirPlay 身份在原生协议服务器和外部广播者之间保持稳定。
+
+无头适配器仅广播镜像和音频能力。因此媒体应用会停留在镜像屏幕内，而不会把独立播放交给接收端有意不支持的 URL/HLS 路径。
+
+镜像时序请求使用 300 ms 响应窗口和 3 秒节奏。时序失败和 AirPlay 控制生命周期转换会汇总到 stderr 供 MirrorSim 诊断使用，不会洪泛发送端或支持日志。
+
 ## 从源码构建
 
-需要 Visual Studio 2022 与 v143 工具集，以及 Windows 10 SDK。
+项目目标为 Visual Studio 2026 搭配 v145 工具集及 Windows 10 SDK。
+使用 Visual Studio 2022 时，在开发人员命令提示符中运行：
+`msbuild AirPlay.sln /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143 /m`。
 
 1. 克隆仓库：
-
    ```bash
    git clone https://github.com/HZDavy/AirPlayServer-zh-CN.git
    ```
@@ -186,6 +197,8 @@ AirPlayServer/
 |-- AirPlayServerLib/        # AirPlay 2 协议库
 |   `-- lib/                 # RAOP、配对、加密与编解码器
 |-- airplay2dll/             # DLL 封装与 FFmpeg H.264 解码器
+|-- MirrorSimAdapter/        # 无头 JSONL 适配器
+|-- tests/                   # 编解码器与协议冒烟测试
 |-- dnssd/                   # Bonjour 发现 DLL
 |-- external/                # SDL2、FFmpeg、ImGui 等依赖
 |-- screenshots/             # README 截图
@@ -198,7 +211,7 @@ AirPlayServer/
 
 ## 许可证
 
-本仓库包含多个库的代码。各库许可证请查阅对应文件。本汉化版遵循上游 MIT 协议保留原作者版权声明。
+仓库原创代码以 MIT 许可证提供。接收端还使用经 OSI 批准的第三方组件，包括以 LGPL-2.1-or-later 动态链接的 FFmpeg、以 LGPL-2.1-or-later 许可的 libplist，以及以 GPL-3.0 许可的 PlayFair 互操作代码。各组件的范围、FFmpeg 构建来源、源码获取方式及许可证位置请参阅 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ## 致谢
 
